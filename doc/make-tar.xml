@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="GB2312"?>
+<!-- ======================================================================                                         
+
+     project：微信server
+     description：生成WAR包用的Ant脚本
+                                
+     ====================================================================== -->
+
+<project name="weixinServer" default="default">
+
+	<property name="RELEASE_DIR" value="../DEPLOY" />
+	<property name="WEB_DIR" value="../WebContent" />
+	<property name="EXTRA_FILES" value="../product" />
+	<property name="LIANA_CORE" value="../../lianaCore/classes" />
+	<property name="COMMON_LIB_DIR" value="../../commonLib" />
+	<property name="TEMP_DIR" value="../temp" />
+	<property name="TEMP_WEB_INF" value="${TEMP_DIR}/WEB-INF" />
+	<property name="TEMP_APP_LIB" value="${TEMP_WEB_INF}/lib" />
+	<property name="CONFIGFILE_PATH" value="../build/CONFIG" />
+	<property name="appName" value="weixinServer"/>
+
+	<!-- ================================= 
+          target: 默认任务
+         ================================= -->
+	<target name="default" depends="packStatic,clean" description="">
+	</target>
+
+	<!-- - - - - - - - - - - - - - - - - - 
+          target: init 初始化
+         - - - - - - - - - - - - - - - - - -->
+	<target name="init">
+		<tstamp>
+			<format property="TODAY" pattern="yyyyMMdd" locale="cn" />
+		</tstamp>
+
+		<mkdir dir="${TEMP_DIR}" />
+		
+		<mkdir dir="${RELEASE_DIR}" />
+
+		<!-- 复制所有文件到临时目录 -->
+		<copy todir="${TEMP_DIR}" overwrite="true">
+			<fileset dir="${WEB_DIR}">
+				<include name="**/*.*" />
+			</fileset>
+		</copy>
+		
+		<!-- 复制配置文件文件到临时目录 -->
+		<copy todir="${TEMP_DIR}" overwrite="true">
+			<fileset dir="${CONFIGFILE_PATH}">
+				<include name="**/*.*" />
+			</fileset>
+		</copy>
+
+		<!-- 将部署专用文件copy到临时目录 
+		<copy todir="${TEMP_DIR}" overwrite="true">
+			<fileset dir="${EXTRA_FILES}">
+				<include name="**/*.*" />
+			</fileset>
+		</copy>
+		-->
+
+		<!-- 将lianaCore打包到临时目录 -->
+		<jar destfile="${TEMP_APP_LIB}/lianaCore.jar">
+			<fileset dir="${LIANA_CORE}">
+				<include name="**/*.*" />
+			</fileset>
+		</jar>
+
+		<!-- 将公共jar copy到临时目录 -->
+		<copy todir="${TEMP_APP_LIB}" overwrite="true">
+			<fileset dir="${COMMON_LIB_DIR}/Basics">
+				<include name="*.jar" />
+				<exclude name="classes12.jar"/>
+				<exclude name="ojdbc14.jar"/>
+				<exclude name="db2jcc.jar"/>
+				<exclude name="xml.jar"/>
+				<exclude name="XMLParser.jar"/>
+			</fileset>
+			<fileset dir="${COMMON_LIB_DIR}/EMP">
+				<include name="*.jar" />
+			</fileset>
+			<fileset dir="${COMMON_LIB_DIR}/com">
+				<include name="bcprov-jdk16-145.jar" />
+			</fileset>
+			<fileset dir="${COMMON_LIB_DIR}/weixin">
+				<include name="*.jar" />
+			</fileset>	
+		</copy>
+	</target>
+
+	<!--
+		增量包
+         - - - - - - - - - - - - - - - - - -->
+	<target name="packStatic" depends="init">
+			<tar destfile="${RELEASE_DIR}/${appName}-${TODAY}.tar" >
+					<tarfileset dir="${TEMP_DIR}">
+					<include name="WEB-INF/classes/com/ecc/liana/weixin/base/GetAccessToken.class"/>
+					<include name="WEB-INF/bizs/weixin/operations/querySecret.xml"/>
+					<include name="WEB-INF/bizs/weixin/operations/BindCardRotatePrize.xml"/>
+						<!--<include name="WEB-INF/lib/log4j-1.2.13.jar"/> -->
+					<include name="script/creditcard/debitCardCertificate.js"/>
+					<include name="css/style.css"/>
+				</tarfileset>
+			</tar>
+		</target>
+	<!-- - - - - - - - - - - - - - - - - - 
+          target: clean 清理
+         - - - - - - - - - - - - - - - - - -->
+	<target name="clean">
+		<delete dir="${TEMP_DIR}" />
+	</target>
+	
+
+</project>
